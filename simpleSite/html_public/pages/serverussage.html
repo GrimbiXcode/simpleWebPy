@@ -1,0 +1,73 @@
+$def with (cpu_percent)
+
+<div id="page-wrapper">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">Live-Messung</h1>
+        </div>
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Geräteliste
+                    </div>
+                    <div class="panel-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>CPU Nr.</th>
+                                        <th>Ussage</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>                       
+                                $for cpu in cpu_percent:
+                                    <tr>
+                                        <td>$(len(cpu_percent)+1-loop.index)</td>
+                                        <td>$cpu</td>
+                                        <td><a class="btn btn-default btn-xs" href="/showMeas.$(loop.index-1)" role="button">Messung ansehen</a></td>
+                                        <td><a class="btn btn-danger btn-xs" href="/delMeas.$(loop.index-1)" role="button">Messung entfernen</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.table-responsive -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <!-- /.panel -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Fernsteuerung
+                    </div>
+                    <!-- /.panel-heading -->
+                    <div class="panel-body">
+                        <a class="btn btn-default btn-xs" role="button">Start</a>
+                        <a class="btn btn-default btn-xs" role="button">Stop</a>
+                    </div>
+                    <!-- /.panel-body -->
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <!-- /.panel -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        CPU Ussage
+                    </div>
+                    <!-- /.panel-heading -->
+                    <div class="panel-body">
+                        <div class="flot-chart">
+                            <div class="flot-chart-content" id="flot-live-chart"></div>
+                        </div>
+                    </div>
+                    <!-- /.panel-body -->
+                </div>
+            </div>
+	    </div>
+        <!-- /.col-lg-12 -->
+    </div>
+</div>
+
+<script src="static/data/cpu-live-data.js"></script>

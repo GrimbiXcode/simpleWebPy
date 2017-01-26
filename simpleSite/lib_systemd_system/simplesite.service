@@ -1,0 +1,15 @@
+[Unit]
+Description=SimpleSite Webserver node
+After=network.target
+
+[Service]
+WorkingDirectory=/home/SimpleSite/processor/
+Type=idle
+ExecStart=/usr/bin/python /home/SimpleSite/processor/simpleSiteApp.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=simpleSite.service
