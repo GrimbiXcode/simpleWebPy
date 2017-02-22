@@ -76,24 +76,22 @@ Press `ctrl + c` in your commandline or terminal to stop the web application.
 ```
 /simpleSite
 ├───/html_public
-│	└───/pages							# Save your HTML-files in this folder
-│		├───/Bootstrap Templates		# Original Bootstrap-files
-│		├───base.html 					# One of the HTML-file
-│		└───...							# More HTML-files
+│   └───/pages                      # Save your HTML-files in this folder
+│       ├───/Bootstrap Templates    # Original Bootstrap-files
+│       ├───base.html               # One of the HTML-file
+│       └───...                     # More HTML-files
 │
 ├───/lib_systemd_system
-│	└───simplesite.service 				# Service-file for systemd controlled autostart
+│   └───simplesite.service          # Service-file for systemd controlled autostart
 │
 └───/processor
-	├───/sessions						# Generated from wep.py to save session-data
-	│
-	├───/static 						# folder for static files like .js .css .less etc.
-	│	├───/data 						# folder for your js-Files to print charts
-	│	└───...							# Other files for the bootstrap framework
-	│
-	└───simpleSiteApp.py 				# python-script of your web application
-
-
+    ├───/sessions                   # Generated from wep.py to save session-data
+    │
+    ├───/static                     # folder for static files like .js .css .less etc.
+    │   ├───/data                   # folder for your js-Files to print charts
+    │   └───...                     # Other files for the bootstrap framework
+    │
+    └───simpleSiteApp.py            # python-script of your web application
 ```
 
 
