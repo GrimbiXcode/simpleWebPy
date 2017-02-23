@@ -27,14 +27,6 @@ urls = (
     '/', 'index',
     '/index', 'index',
     '/serverussage', 'serverussage',
-    '/logout', 'logout',
-    '/measurements', 'measurements',
-    '/showMeas.(\d+)', 'showMeasurement',
-    '/delMeas.(\d+)', 'delMeasurement',
-    '/showLiveMeas(.*)', 'showLiveMeasurement',
-    '/register', 'register',
-    '/termin', 'termin',
-    '/delDate.(\d+)', 'delDate',
     )
 
 # Append Workingdirecory for MongoAPI-Module (prevent problems in autostart on server) 
@@ -64,7 +56,7 @@ web.config.session_parameters.file_dir = '/temp'
 # MessagesQueues for the threads
 cpuUssageQueue = Queue()
 
-
+# CPU-ussage
 g_cpu_ussage = 0.0
 
 # ****************************************************************************
@@ -85,14 +77,10 @@ if debug:
 # ============================================================================
 
 # ****************************************************************************
-# mqttThread(threading.Thread)
-# Thread for MQTT-Connection:
-#   open a client for subscribing the topic "d/#" and publish messages in the
-#   topic "s/#"
-#   Subscribe: if some data recived -> save them in the queue q2
-#   Publish: if some data in Queue q1 -> publish them
+# cpuThread(threading.Thread)
+# Thread for continued watching of the cpu ussage
 # ****************************************************************************
-class mqttThread(threading.Thread):
+class cpuThread(threading.Thread):
     
     def __init__(self, threadID, name, q1):
         threading.Thread.__init__(self)
@@ -104,11 +92,16 @@ class mqttThread(threading.Thread):
     def run(self):
         if debug: print(self.name + ": Starting " + self.name)
         while not self._stopevent.isSet():
+            # read the cpu ussage
             performanceVar = psutil.cpu_percent(interval=0.1)
+            # clean up the queue to prevent an overfill
             if not self.cpu_ussage.empty():
                 dummy = cpuUssageQueue.get()
+            # write new ussage into the queue
             self.cpu_ussage.put(performanceVar)
+            # give other threads time to read the queue
             time.sleep(0.4)
+
         if debug: print(self.name + ": Closing")
         time.sleep(0.5)
 
@@ -146,6 +139,7 @@ dateForm = web.form.Form(
 # FUNCTIONS
 # ============================================================================
 
+# no function as so far
 
 # ============================================================================
 # CLASSES
@@ -171,175 +165,26 @@ class serverussage:
 
     def GET(self):
         global g_cpu_ussage
+        # check state of queue
         if not cpuUssageQueue.empty():
             g_cpu_ussage = cpuUssageQueue.get()
         return render.serverussage()
 
     def POST(self):
         global g_cpu_ussage
+        # check state of queue
         if not cpuUssageQueue.empty():
             g_cpu_ussage = cpuUssageQueue.get()
+        # return the cpu ussage in xml-style
         return "<SERVERUSSAGE><CPU_USSAGE>" + str(g_cpu_ussage) + "</CPU_USSAGE></SERVERUSSAGE>"
-
-
-# ****************************************************************************
-# REGISTER 
-# ****************************************************************************
-class register:
-
-    def GET(self):
-        state = ["none",""]
-        if session.loggedin:
-            raise web.seeother('/')
-        formData = registerForm()
-        return renderLogin.register(formData, state)
-
-    def POST(self):
-        state = ["none",""]
-        formData = registerForm()
-        if formData.validates():
-            pwdhash1 = hashlib.md5(formData.d.password1).hexdigest()
-            if debug: print("Password input:" + pwdhash1 + "\n")
-            data = list()
-            data.append({
-                "prename": formData.d.prename,
-                "name": formData.d.name,
-                "street": formData.d.street,
-                "housenumber": formData.d.housenumber,
-                "plz": formData.d.plz,
-                "city": formData.d.city,
-                "email": formData.d.email,
-                "username": formData.d.user,
-                "password": pwdhash1
-                }
-            )
-            if MongoAPI.registerUser(data, formData.d.isDoctor):
-                state = ["success", "Registrierung erfolgreich! Bitte kehren Sie zum Login zurueck."]
-                return renderLogin.register(formData, state)
-            else:
-                state = ["failuser", "Email oder Username existert bereits."]
-                return renderLogin.register(formData, state)
-        else:
-            state = ["failpw", "Passworteingaben nicht identisch"]
-            return renderLogin.register(formData, state)
-        raise web.seeother('/')
-
-
-# ****************************************************************************
-# INDEX 
-# ****************************************************************************
-class example:
-
-    def GET(self):
-        if session.loggedin:
-            if session.doctor:
-                return renderDoctor.example(session.username)
-            else:
-                return renderPatient.example(session.username)
-            return render.example(session.username)
-        else:
-            raise web.seeother('/login')
-
-    def POST(self):
-        return render.index()
-
-
-# ****************************************************************************
-# SINGLE_MEASUREMENT 
-# ****************************************************************************
-class showMeasurement:
-
-    def GET(self, num):
-        if session.loggedin:
-            meas = MongoAPI.getAllMeasurements(session.userid)
-            meas = sorted(meas, key=lambda k: k['meas_id'], reverse = True)
-            if num == "":
-                return ""
-            if debug: print(meas[int(num)]['meas_id'])
-            content = MongoAPI.getData(meas[int(num)]['meas_id'])
-
-            data = "[[" + str(content).replace("%\\n", "").replace("\', \'", ",").replace(",", "],[")[2:-2] + "]]"
-            
-            intdata = map(int,data[2:-2].split("],["))
-            if debug: print(str(intdata)[:40]+"...")
-            filteredData = "[" + str((Implement_Notch_Filter(0.008,7,50,0,3,'bessel',intdata)).tolist()).replace(",", "],[") + "]"
-            
-
-            if debug: print(str(filteredData)[:40]+"...")
-            if session.doctor:
-                return renderDoctor.showMeasurement(filteredData, str(int(num) + 1))
-            else:
-                return renderPatient.showMeasurement(filteredData, str(int(num) + 1))
-            return render.index(session.username)
-        else:
-            session.kill()
-            raise web.seeother('/login')
-
-
-# ****************************************************************************
-# LIVE_MEASUREMENT 
-# ****************************************************************************
-class showLiveMeasurement:
-
-    def GET(self, num):
-        if session.loggedin:
-            devicelist = MongoAPI.getLiveState(session.userid)
-            if debug: print("*************************\nMessung:")
-            if debug: pprint(devicelist)
-            session.liveIndex = 0
-            command = {
-                'topic': 'EazyEKG',
-                'message': 'Testing the paraverse'
-                }
-            commandQueue.put(command)
-            onAir = False
-            if num != "":
-                session.liveDeviceID = devicelist[int(num)]['_id']
-                if debug: session.liveDeviceID
-                onAir = True
-            state = True
-            if devicelist == []:
-                state = False
-            if session.doctor:
-                return renderDoctor.showLiveMeasurement(devicelist, state, onAir)
-            else:
-                return renderPatient.showLiveMeasurement(devicelist, state, onAir)
-            return render.index(session.username)
-        else:
-            session.kill()
-            raise web.seeother('/login')
-
-    def POST(self, num):
-        if session.loggedin:
-            if num == "":
-                return ""
-            content = MongoAPI.getLiveData(session.liveDeviceID, session.liveIndex)
-            if content == session.liveIndex:
-                if debug: print("nothing new")
-                return ""
-            session.liveIndex = int(content.pop())
-
-            data = "[[" + str(content).replace("%\\n", "").replace("\', \'", ",").replace(",", "],[")[2:-2] + "]]"
-            intdata = map(int,data[2:-2].split("],["))
-            filteredData = "[" + str((Implement_Notch_Filter(0.008,7,50,0,3,'bessel',intdata)).tolist()).replace(",", "],[") + "]"
-
-            if debug: print(str(content)[:40]+"..." + " + " + str(session.liveIndex))
-            data = "[[" + str(content).replace("%\\n", "").replace("\', \'", ",").replace(",", "],[")[2:-2] + "]]"
-            if debug: print(data[:40]+"...")
-            return filteredData
-        else:
-            session.kill()
-            raise web.seeother('/login')
 
 
 # ============================================================================
 # MAINCODE
 # ============================================================================
 
-# app = web.application(urls, globals())
-
 if __name__ == "__main__": 
-    threadOne = mqttThread(1, "Looking for CPU-ussage",cpuUssageQueue)
+    threadOne = cpuThread(1, "Looking for CPU-ussage",cpuUssageQueue)
     threadOne.deamon = True
     threadOne.start()
     app.run()
