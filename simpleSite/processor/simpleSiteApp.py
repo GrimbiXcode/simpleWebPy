@@ -45,6 +45,7 @@ print(sys.path)
 app = web.application(urls, globals())
 session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={
     'username': "",
+    'cpu_ussage': 0,
     })
 
 # feed the globals
@@ -62,8 +63,8 @@ web.config.session_parameters.file_prefix = 'sess'
 web.config.session_parameters.file_dir = '/temp'
 
 # MessagesQueues for the threads
-dataQueue = Queue()
-commandQueue = Queue()
+cpuUssageQueue = Queue()
+
 
 # ****************************************************************************
 # Debug-Code
@@ -92,46 +93,23 @@ if debug:
 # ****************************************************************************
 class mqttThread(threading.Thread):
     
-    def __init__(self, threadID, name, q1, q2):
+    def __init__(self, threadID, name, q1):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
-        self.cmd = q1       # data to publish
-        self.data = q2      # recived data from subscriber
+        self.cpu_ussage = q1       # cpu-data
         self._stopevent = threading.Event()
-
-        # define what happen when mqtt-client is connected: subscribe the tobic "d/#"
-        def on_connect(client, userdata, flags, rc):
-            if debug: print(self.name + ": Connected with result code " + str(rc))
-            client.subscribe("d/#")
-
-        # define what ahppen if getting data on subscribtion-topic
-        def on_message(client, userdata, msg):
-            if debug: print(msg.topic + " " + str(msg.payload))
-            if debug: print(self.name + ": start putting msg" + " ----> " + str(datetime.now()))
-            self.data.put(msg)
-            if debug: print(self.name + ": finished putting msg" + " ----> " + str(datetime.now()))
-
-        # install callbacks and setup mqtt-client
-        self.client.on_connect = on_connect
-        self.client.on_message = on_message
-        self.client.connect("91.205.173.237", 1883, 60)     # ip, port, max allowed sec between keepalive 
 
     def run(self):
         if debug: print(self.name + ": Starting " + self.name)
         while not self._stopevent.isSet():
-            # run mqtt-client
-            self.client.loop()
-            # check if there are data to publish in the queque q1
-            if not self.cmd.empty():
-                command = self.cmd.get()
-                if debug: print("Outputting: " + "s/" + command['topic'] + " " + command['message'])
-                self.client.publish("s/" + command['topic'], command['message'])
-        # close serverconnection if stopevent occured
-        self.client.disconnect()
-        if debug: print(self.name + ": close connection")
+            performanceVar = psutil.cpu_percent(interval=0.1)
+            if not self.cpu_ussage.empty():
+                dummy = cpuUssageQueue.get()
+            self.cpu_ussage.put(performanceVar)
+            time.sleep(0.4)
+        if debug: print(self.name + ": Closing")
         time.sleep(0.5)
-
 
     def join(self, timeout=None):
         """ Stop the thread and wait for it to end. """
@@ -190,47 +168,15 @@ class index:
 # ****************************************************************************
 class serverussage:
 
-    def GET(self, num):
-        devicelist = MongoAPI.getLiveState(session.userid)
-        if debug: print("*************************\nMessung:")
-        if debug: pprint(devicelist)
-        session.liveIndex = 0
-        command = {
-            'topic': 'EazyEKG',
-            'message': 'Testing the paraverse'
-            }
-        commandQueue.put(command)
-        onAir = False
-        if num != "":
-            session.liveDeviceID = devicelist[int(num)]['_id']
-            if debug: session.liveDeviceID
-            onAir = True
-        state = True
-        if devicelist == []:
-            state = False
-        if session.doctor:
-            return renderDoctor.showLiveMeasurement(devicelist, state, onAir)
-        else:
-            return renderPatient.showLiveMeasurement(devicelist, state, onAir)
-        return render.index(session.username)
+    def GET(self):
+        if not cpuUssageQueue.empty():
+            session.cpu_ussage = cpuUssageQueue.get()
+        return render.serverussage()
 
-    def POST(self, num):
-        if num == "":
-            return ""
-        content = MongoAPI.getLiveData(session.liveDeviceID, session.liveIndex)
-        if content == session.liveIndex:
-            if debug: print("nothing new")
-            return ""
-        session.liveIndex = int(content.pop())
-
-        data = "[[" + str(content).replace("%\\n", "").replace("\', \'", ",").replace(",", "],[")[2:-2] + "]]"
-        intdata = map(int,data[2:-2].split("],["))
-        filteredData = "[" + str((Implement_Notch_Filter(0.008,7,50,0,3,'bessel',intdata)).tolist()).replace(",", "],[") + "]"
-
-        if debug: print(str(content)[:40]+"..." + " + " + str(session.liveIndex))
-        data = "[[" + str(content).replace("%\\n", "").replace("\', \'", ",").replace(",", "],[")[2:-2] + "]]"
-        if debug: print(data[:40]+"...")
-        return filteredData
+    def POST(self):
+        if not cpuUssageQueue.empty():
+            session.cpu_ussage = cpuUssageQueue.get()
+        return "<SERVERUSSAGE><CPU_USSAGE>" + str(session.cpu_ussage) + "</CPU_USSAGE></SERVERUSSAGE>"
 
 
 # ****************************************************************************
@@ -390,9 +336,9 @@ class showLiveMeasurement:
 # app = web.application(urls, globals())
 
 if __name__ == "__main__": 
-    #threadOne = mqttThread(1, "MQTThandler",commandQueue ,dataQueue)
-    #threadOne.deamon = True
-    #threadOne.start()
+    threadOne = mqttThread(1, "Looking for CPU-ussage",cpuUssageQueue)
+    threadOne.deamon = True
+    threadOne.start()
     app.run()
 
 # ============================================================================

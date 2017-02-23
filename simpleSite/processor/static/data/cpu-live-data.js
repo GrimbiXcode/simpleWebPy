@@ -1,13 +1,13 @@
-var ekg = [];
-var ekgpointer = 0; // pointer for redrawing
-var plotcut = 20; // define distance between old plot and ekgpointer
+var cpuUssage = [];
+var cpuUssagePointer = 0; // pointer for redrawing
 var dataset;
-var totalPoints = 1000;
-var updateInterval = 1000;
+var totalPoints = 100;
+var plotcut = totalPoints*0.04; // define distance between old plot and cpuUssagePointer
+var updateInterval = 500;
 var data = [];
 var now = 0;
 var index = 0;
-var samplesPerRendering = 20;
+var samplesPerRendering = 2;
 
 var options = {
     series: {
@@ -34,9 +34,9 @@ var options = {
             }
     },
     yaxis: {
-        min: ekg.min,
-        max: ekg.max,
-        axisLabel: "EKG loading",
+        min: 0,
+        max: cpuUssage.max,
+        axisLabel: "cpuUssage loading",
         axisLabelUseCanvas: true,
         axisLabelFontSizePixels: 12,
         axisLabelFontFamily: 'Verdana, Arial',
@@ -75,17 +75,27 @@ var options = {
     },
 };
 
-function GetData() {
-    $.ajaxSetup({ cache: false });
 
-    $.ajax({
-        type: 'POST',
-        dataType: 'json',
-        success: update,
-        error: function () {
-            setTimeout(GetData, updateInterval);
-        }
-    });
+/* Function for value in table */
+function UpdateTableValue(xml) {
+    var xmlDoc = xml.responseXML;
+    var newcpuUssage = xmlDoc.getElementsByTagName("CPU_USSAGE")[0].childNodes[0].nodeValue
+    document.getElementById('cpu-ussage').innerHTML = newcpuUssage;
+    data.push(newcpuUssage);
+    setTimeout(GetData, updateInterval);
+}
+
+
+function GetData() {
+  var xhttp;
+  xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      UpdateTableValue(this);
+    }
+  };
+  xhttp.open("POST", "serverussage", true);
+  xhttp.send();   
 }
 
 function update(_data) {
@@ -100,11 +110,11 @@ function getRendered() {
     for (var i = 0; i < samplesPerRendering; i++){
         if (data.length) {
                 for (var j = 1; j < plotcut; j++){
-                    ekg[ekgpointer + j] = null;
+                    cpuUssage[cpuUssagePointer + j] = null;
             }
-            ekg[ekgpointer] = [ekgpointer, data[0]];
-            ekgpointer++;
-            ekgpointer %= totalPoints;
+            cpuUssage[cpuUssagePointer] = [cpuUssagePointer, data[0]];
+            cpuUssagePointer++;
+            cpuUssagePointer %= totalPoints;
             data = data.slice(1);
         }
     }
@@ -117,18 +127,18 @@ function initData() {
         }
 
     for (var i = 0; i < totalPoints; i++) {
-        ekg.push([i,null]);
+        cpuUssage.push([i,null]);
     }
 }
 
 $(document).ready(function () {
     initData();
     dataset = [
-        { label: "EKG Live-Stream", data: ekg, lines: { fill: false, lineWidth: 1.2 }, color: "#00FF00" }   
+        { label: "cpuUssage Live-Stream", data: cpuUssage, lines: { fill: false, lineWidth: 1.2 }, color: "#00FF00" }   
     ];
     $.plot($("#flot-live-chart"), dataset, options);
     
-    setTimeout(GetData, 500);
+    setTimeout(GetData, updateInterval);
 
 });
 
@@ -138,7 +148,7 @@ setInterval(function updateData() {
     }
         getRendered();
     dataset = [
-        { label: "EKG Live-Stream", data: ekg, lines: { fill: false, lineWidth: 1.2 }, color: "#00FF00" }    
+        { label: "CPU Ussage [%] Live-Stream", data: cpuUssage, lines: { fill: false, lineWidth: 1.2 }, color: "#00FF00" }    
     ];
     $.plot($("#flot-live-chart"), dataset, options);
 }, 5);

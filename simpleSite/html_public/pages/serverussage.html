@@ -1,4 +1,3 @@
-$def with (cpu_percent)
 
 <div id="page-wrapper">
     <div class="row">
@@ -15,19 +14,14 @@ $def with (cpu_percent)
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>CPU Nr.</th>
+                                        <th>CPU</th>
                                         <th>Ussage</th>
-                                        <th></th>
-                                        <th></th>
                                     </tr>
                                 </thead>
-                                <tbody>                       
-                                $for cpu in cpu_percent:
+                                <tbody>                     
                                     <tr>
-                                        <td>$(len(cpu_percent)+1-loop.index)</td>
-                                        <td>$cpu</td>
-                                        <td><a class="btn btn-default btn-xs" href="/showMeas.$(loop.index-1)" role="button">Messung ansehen</a></td>
-                                        <td><a class="btn btn-danger btn-xs" href="/delMeas.$(loop.index-1)" role="button">Messung entfernen</a></td>
+                                        <td>Lokal</td>
+                                        <td><span id="cpu-ussage"></span></td>
                                     </tr>
                                 </tbody>
                             </table>

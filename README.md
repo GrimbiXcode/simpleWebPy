@@ -3,7 +3,7 @@ A simple example web application with Python web.py and the Bootstrap 3 framewor
 
 ## Included functions
 
- * jQuery - AJAX get() and post() Methods
+ * XMLHttpRequest
  * Worker-Thread with message-queue
  * flot-live-chart
 
@@ -93,7 +93,6 @@ Press `ctrl + c` in your commandline or terminal to stop the web application.
     │
     └───simpleSiteApp.py            # python-script of your web application
 ```
-
 
 ## References
  
