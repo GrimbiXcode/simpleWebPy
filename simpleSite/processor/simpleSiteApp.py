@@ -45,7 +45,6 @@ print(sys.path)
 app = web.application(urls, globals())
 session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={
     'username': "",
-    'cpu_ussage': 0,
     })
 
 # feed the globals
@@ -65,6 +64,8 @@ web.config.session_parameters.file_dir = '/temp'
 # MessagesQueues for the threads
 cpuUssageQueue = Queue()
 
+
+g_cpu_ussage = 0.0
 
 # ****************************************************************************
 # Debug-Code
@@ -169,14 +170,16 @@ class index:
 class serverussage:
 
     def GET(self):
+        global g_cpu_ussage
         if not cpuUssageQueue.empty():
-            session.cpu_ussage = cpuUssageQueue.get()
+            g_cpu_ussage = cpuUssageQueue.get()
         return render.serverussage()
 
     def POST(self):
+        global g_cpu_ussage
         if not cpuUssageQueue.empty():
-            session.cpu_ussage = cpuUssageQueue.get()
-        return "<SERVERUSSAGE><CPU_USSAGE>" + str(session.cpu_ussage) + "</CPU_USSAGE></SERVERUSSAGE>"
+            g_cpu_ussage = cpuUssageQueue.get()
+        return "<SERVERUSSAGE><CPU_USSAGE>" + str(g_cpu_ussage) + "</CPU_USSAGE></SERVERUSSAGE>"
 
 
 # ****************************************************************************
