@@ -114,8 +114,8 @@ function GetData() {
             var xmlDoc = this.responseXML;
             /* fetch the XML data*/
             var newcpuUssage;
-            for (var i = 0; xmlDoc.getElementsByTagName("CPU_USSAGE")[0].childNodes.length > i; i++) {
-                newcpuUssage = xmlDoc.getElementsByTagName("CPU_USSAGE")[0].childNodes[i].nodeValue;
+            for (var i = 0; xmlDoc.getElementsByTagName("CPU_USSAGE").length > i; i++) {
+                newcpuUssage = xmlDoc.getElementsByTagName("CPU_USSAGE")[i].childNodes[0].nodeValue;
                 /* put it into the buffer */
                 data.push(newcpuUssage);
                 }

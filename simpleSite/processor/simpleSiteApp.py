@@ -14,6 +14,7 @@ import os
 from datetime import datetime
 from datetime import timedelta
 import psutil
+import random
 
 import threading
 from Queue import Queue
@@ -26,6 +27,8 @@ web.config.debug = False
 urls = (
     '/', 'index',
     '/index', 'index',
+    '/message', 'chat',
+    '/message=(.*)', 'chat',
     '/serverussage', 'serverussage',
     )
 
@@ -55,9 +58,11 @@ web.config.session_parameters.file_dir = '/temp'
 
 # MessagesQueues for the threads
 cpuUssageQueue = Queue()
+inputChatQueue = Queue()
 
-# CPU-ussage
+# Global variables
 g_cpu_ussage = 0.0
+g_chat = list()
 
 # ****************************************************************************
 # Debug-Code
@@ -110,6 +115,32 @@ class cpuThread(threading.Thread):
         self._stopevent.set( )
         threading.Thread.join(self, timeout)
 
+# ****************************************************************************
+# chatThread(threading.Thread)
+# Thread to read serverside commandline inputs
+# ****************************************************************************
+class chatThread(threading.Thread):
+    
+    def __init__(self, threadID, name, q1):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.chatServerInput = q1       # "chat input"-data serverside
+        self._stopevent = threading.Event()
+
+    def run(self):
+        if debug: print(self.name + ": Starting " + self.name)
+        while not self._stopevent.isSet():
+            message = "server :" + str(datetime.now()) + " > " + raw_input()
+            self.chatServerInput.put(message)
+        if debug: print(self.name + ": Closing")
+        time.sleep(0.5)
+
+    def join(self, timeout=None):
+        """ Stop the thread and wait for it to end. """
+        self._stopevent.set( )
+        threading.Thread.join(self, timeout)
+
 
 # ============================================================================
 # FORMS
@@ -139,7 +170,7 @@ dateForm = web.form.Form(
 # FUNCTIONS
 # ============================================================================
 
-# no function as so far
+# no function so far
 
 # ============================================================================
 # CLASSES
@@ -151,11 +182,35 @@ dateForm = web.form.Form(
 class index:
 
     def GET(self):
-        return render.index(True)
+        if session.username == "":
+            session.username = "user" + str(random.randint(99999, 1000000))
+        return render.index(random.randint(99999, 1000000), session.username)
 
 
-    def POST(self):
-        return render.index(True)
+# ****************************************************************************
+# CHAT FROM INDEX
+# ****************************************************************************
+class chat:
+
+    def GET(self):
+        global g_chat
+        if not inputChatQueue.empty():
+            g_chat.append(inputChatQueue.get())
+
+        xml_messages = ""
+        for message in g_chat:
+            xml_messages += "<MESSAGE>" + message + "</MESSAGE>"
+        print(xml_messages)
+        return "<CHAT>" + xml_messages + "</CHAT>"
+
+    def POST(self, newMessage):
+        global g_chat
+        if newMessage != "":
+            g_chat.append(session.username + ":" + str(datetime.now()) + " > " + newMessage)
+
+        # send an empty xml element
+        return "<?xml version=\"1.0\" encoding=\"utf-8\"?><status>success</status>"
+
 
 
 # ****************************************************************************
@@ -184,9 +239,18 @@ class serverussage:
 # ============================================================================
 
 if __name__ == "__main__": 
-    threadOne = cpuThread(1, "Looking for CPU-ussage",cpuUssageQueue)
+
+    threadOne = cpuThread(1, "Looking for CPU-ussage", cpuUssageQueue)
+    threadTwo = chatThread(1, "Chat-Thread", inputChatQueue)
+
     threadOne.deamon = True
+    threadTwo.deamon = True
+
     threadOne.start()
+    threadTwo.start()
+
+    g_chat.append("server:" + str(datetime.now()) + " > Server booted successfull")
+
     app.run()
 
 # ============================================================================

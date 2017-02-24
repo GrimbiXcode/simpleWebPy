@@ -1,19 +1,20 @@
-$def with (state)
+$def with (luckyNumber, username)
 
 <div id="page-wrapper">
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header">Willkommen</h1>
+            <h1 class="page-header">Willkommen, $username</h1>
         </div>
     </div>
     <div class="row">
         <div class="col-lg-6">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Geräteliste
+                    Glückszahl
                 </div>
                 <div class="panel-body">
-                    <a class="btn btn-default" href="index" role="button"><i class="fa fa-refresh fa-fw"></i>Neu Laden</a>
+                    <strong>Glückwunsch! </strong> Deine jetztige Glückszahl lautet: <mark>$luckyNumber</mark><br>
+                    <a class="btn btn-default" href="/" role="button"><i class="fa fa-refresh fa-fw"></i>Neu Laden</a>
                     <!-- /.table-responsive -->
                 </div>
             </div>
@@ -21,13 +22,20 @@ $def with (state)
         <div class="col-lg-6">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Fernsteuerung
+                    Chat-Bereich
                 </div>
                 <div class="panel-body">
-                    <a class="btn btn-default btn-xs" role="button">Start</a>
-                    <a class="btn btn-default btn-xs" role="button">Stop</a>
+                    <p id="chat"></p>
+                    <form>
+                        <div class="form-group">
+                        <input class="form-control" id="message"></input>
+                        </div>
+                        <button type="button" class="btn btn-default" onclick="sendMessage()">Senden</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="static/data/chat.js"></script>
