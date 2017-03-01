@@ -5,10 +5,18 @@ A simple example web application with Python web.py and the Bootstrap 3 framewor
 
  * XMLHttpRequest
  * Worker-Thread with message-queue
+ * simple chat function
  * flot-live-chart
 
+This is the "index"-page of the SimpleWebPy-Site. It contains a very simple made chat: 
 
-## Preparations
+![Image of Chat in SimpleSite](https://github.com/GrimbiXcode/simpleWebPy/blob/master/readmeData/pictures/screenChat.PNG)
+
+Here you can see a chart made with flot. It shows the cpu ussage of the server cpu in percent.
+
+![Image of Chart in SimpleSite](https://github.com/GrimbiXcode/simpleWebPy/blob/master/readmeData/pictures/screenChart.PNG)
+
+## Installation
 
 ### Required Python modules
 
