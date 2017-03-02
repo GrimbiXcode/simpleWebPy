@@ -74,7 +74,7 @@ function sendMessage() {
     /* send a POST-request to the server  with the URL: "http://yourserver/message="
     * and add the new message behind the url
     */
-    xhttp.open("POST", "message=" + message, true);
+    xhttp.open("POST", "newMessage=" + message, true);
     xhttp.send();
 }
 
@@ -96,7 +96,7 @@ function getMessages() {
     xhttp.onreadystatechange = fetchData;
 
     /* send a POST-request to the server  with the URL: "http://yourserver/serverussage" */
-    xhttp.open("GET", "message", true);
+    xhttp.open("POST", "getMessages", true);
     xhttp.send();
 }
 

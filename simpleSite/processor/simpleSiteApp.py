@@ -27,8 +27,8 @@ web.config.debug = False
 urls = (
     '/', 'index',
     '/index', 'index',
-    '/message', 'chat',
-    '/message=(.*)', 'chat',
+    '/getMessages', 'getMessages',
+    '/newMessage=(.*)', 'newMessage',
     '/serverussage', 'serverussage',
     )
 
@@ -63,6 +63,7 @@ inputChatQueue = Queue()
 # Global variables
 g_cpu_ussage = 0.0
 g_chat = list()
+g_xml_header = "<?xml version=\"1.0\" encoding=\"utf-8\"?><status>success</status>"
 
 # ****************************************************************************
 # Debug-Code
@@ -190,9 +191,9 @@ class index:
 # ****************************************************************************
 # CHAT FROM INDEX
 # ****************************************************************************
-class chat:
+class getMessages:
 
-    def GET(self):
+    def POST(self):
         global g_chat
         if not inputChatQueue.empty():
             g_chat.append(inputChatQueue.get())
@@ -203,13 +204,15 @@ class chat:
         print(xml_messages)
         return "<CHAT>" + xml_messages + "</CHAT>"
 
+class newMessage:
+
     def POST(self, newMessage):
         global g_chat
         if newMessage != "":
             g_chat.append(session.username + ":" + str(datetime.now()) + " > " + newMessage)
 
         # send an empty xml element
-        return "<?xml version=\"1.0\" encoding=\"utf-8\"?><status>success</status>"
+        return g_xml_header
 
 
 
