@@ -74,7 +74,7 @@ function sendMessage() {
     /* send a POST-request to the server  with the URL: "http://yourserver/message="
     * and add the new message behind the url
     */
-    xhttp.open("POST", "message=" + message, true);
+    xhttp.open("POST", "newMessage=" + message, true);
     xhttp.send();
 }
 
@@ -83,12 +83,12 @@ function sendMessage() {
 ********************************************************************************/
 
 /********************************************************************************
-* GetMessages()
+* getMessages()
 * ------------------------------------------------------------------------------
 * send a request to the server to get data
 * and fetch received data into the receive buffer
 ********************************************************************************/
-function GetMessages() {
+function getMessages() {
     var xhttp;
     xhttp = new XMLHttpRequest();
 
@@ -96,12 +96,12 @@ function GetMessages() {
     xhttp.onreadystatechange = fetchData;
 
     /* send a POST-request to the server  with the URL: "http://yourserver/serverussage" */
-    xhttp.open("GET", "message", true);
+    xhttp.open("POST", "getMessages", true);
     xhttp.send();
 }
 
 /********************************************************************************
-* End of GetMessages()
+* End of getMessages()
 ********************************************************************************/
 /*-------------------------------------------------------------------------------
 # END OF SECTION FUNCTIONS
@@ -115,7 +115,7 @@ function GetMessages() {
 /* if Browser is ready: Run following function */
 $(document).ready(function () {
     /* start getting the data */
-    setInterval(GetMessages, getMessagesInterval);
+    setInterval(getMessages, getMessagesInterval);
 });
 
 
