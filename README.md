@@ -79,6 +79,10 @@ python /home/john/web/SimpleWebPy/simpleSite/processor/SimpleSiteApp.py
 
 Press `ctrl + c` in your commandline or terminal to stop the web application.
 
+**Note:** You have to close all sessions (open internet browser) to close the script with `ctrl + c`. Otherwise, the web.py application and the "input"-thread prohibits the close process. 
+
+You can also kill the python process, but I do not recommend this way.
+
 # Overview
 
 ## Directory structure of the project
