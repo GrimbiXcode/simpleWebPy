@@ -79,6 +79,8 @@ python /home/john/web/SimpleWebPy/simpleSite/processor/SimpleSiteApp.py
 
 Press `ctrl + c` in your commandline or terminal to stop the web application.
 
+# Overview
+
 ## Directory structure of the project
 
 ```
@@ -113,7 +115,15 @@ Press `ctrl + c` in your commandline or terminal to stop the web application.
     └───simpleSiteApp.py            # python-script of your web application
 ```
 
-## References
+## Explanaition of used AJAX
+
+The following diagram shows you, how the AJAX request in the chat works.
+
+![Diagram to explain XMLrequest](https://github.com/GrimbiXcode/simpleWebPy/blob/master/readmeData/pictures/AJAXrequest.png)
+
+The same principle is used in the page serverussage.
+
+# References
  
  * Bootstrap-Homepage - http://getbootstrap.com/
  * Python-Module web.py - http://webpy.org/
