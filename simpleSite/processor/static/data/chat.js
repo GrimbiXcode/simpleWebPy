@@ -70,6 +70,8 @@ function sendMessage() {
 
     // Get the value of the input field with id="message"
     message = document.getElementById("message").value;
+    // Clean input by sending the message
+    document.getElementById("message").value = "";
 
     /* send a POST-request to the server  with the URL: "http://yourserver/message="
     * and add the new message behind the url

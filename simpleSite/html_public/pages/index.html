@@ -14,8 +14,9 @@ $def with (luckyNumber, username)
                 </div>
                 <div class="panel-body">
                     <strong>Glückwunsch! </strong> Deine jetztige Glückszahl lautet: <mark>$luckyNumber</mark><br>
+                    <form>
                     <a class="btn btn-default" href="/" role="button"><i class="fa fa-refresh fa-fw"></i>Neu Laden</a>
-                    <!-- /.table-responsive -->
+                    </form>
                 </div>
             </div>
         </div>
@@ -26,12 +27,10 @@ $def with (luckyNumber, username)
                 </div>
                 <div class="panel-body">
                     <p id="chat"></p>
-                    <form>
-                        <div class="form-group">
-                        <input class="form-control" id="message"></input>
-                        </div>
-                        <button type="button" class="btn btn-default" onclick="sendMessage()">Senden</button>
-                    </form>
+                    <div class="form-group">
+                    <input class="form-control" id="message" onkeydown="if (event.keyCode == 13) document.getElementById('btnSend').click()" placeholder="Enter your message here…"></input>
+                    </div>
+                    <button type="button" class="btn btn-default" id = "btnSend" onclick="sendMessage()">Senden</button>
                 </div>
             </div>
         </div>
