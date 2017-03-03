@@ -93,7 +93,7 @@ You can also kill the python process, but I do not recommend this way.
 ├───/html_public
 │   │
 │   └───/pages                      # Save your HTML-files in this folder
-│	    │
+│       │
 │       ├───base.html               # One of the HTML-file
 │       ├───index.html              # One of the HTML-file
 │       ├───serverussage.html       # One of the HTML-file
