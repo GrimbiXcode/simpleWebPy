@@ -47,7 +47,7 @@ function fetchData() {
 
             /* prepare the messages */
             for (var i = 0; chat.length > i; i++) {
-                newMessages += chat[i] + "<br>";
+                newMessages += chat[i].substring(0,chat[i].indexOf(">")+1).fontcolor("green").small() + chat[i].slice( chat[i].indexOf(">")+1) + "<br>";
             }
             document.getElementById('chat').innerHTML = newMessages;
         }

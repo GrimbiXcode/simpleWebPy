@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- encoding: utf-8 -*-
 # ============================================================================
 # File:         simpleSiteApp.py
 # Author:       David Grimbichler
@@ -40,6 +41,7 @@ print(sys.path)
 app = web.application(urls, globals())
 session = web.session.Session(app, web.session.DiskStore('sessions'), initializer={
     'username': "",
+    'state': "new",
     })
 
 # feed the globals
@@ -132,7 +134,7 @@ class chatThread(threading.Thread):
     def run(self):
         if debug: print(self.name + ": Starting " + self.name)
         while not self._stopevent.isSet():
-            message = "server :" + str(datetime.now()) + " > " + raw_input()
+            message = "server: " + datetime.now().strftime("%d-%m-%Y %H:%M:%S") + " > " + stringXMLfilter(raw_input())
             self.chatServerInput.put(message)
         if debug: print(self.name + ": Closing")
         time.sleep(0.5)
@@ -171,7 +173,20 @@ dateForm = web.form.Form(
 # FUNCTIONS
 # ============================================================================
 
-# no function so far
+# ****************************************************************************
+# stringXMLfilter
+# filters html signs in a string to make it xml-friendly
+#   input: a string
+#   output: filtered input string, ready for xml
+# ****************************************************************************
+
+def stringXMLfilter(inputString):
+    outputString = inputString.replace("&", "&amp;")
+    outputString = outputString.replace("\"", "&quot;")
+    outputString = outputString.replace("'", "&apos;")
+    outputString = outputString.replace("<", "&lt;")
+    outputString = outputString.replace(">", "&gt;")
+    return outputString
 
 # ============================================================================
 # CLASSES
@@ -183,8 +198,12 @@ dateForm = web.form.Form(
 class index:
 
     def GET(self):
+        global g_chat
         if session.username == "":
             session.username = "user" + str(random.randint(99999, 1000000))
+        if session.state == "new":
+            g_chat.append(session.username + ": " + datetime.now().strftime("%d-%m-%Y %H:%M:%S") + " > " + "logged in!")
+            session.state = "active"
         return render.index(random.randint(99999, 1000000), session.username)
 
 
@@ -196,12 +215,13 @@ class getMessages:
     def POST(self):
         global g_chat
         if not inputChatQueue.empty():
+            # check maximum length of 10 messages in the chat
+            while len(g_chat) > 10: g_chat.pop(0)
             g_chat.append(inputChatQueue.get())
 
         xml_messages = ""
         for message in g_chat:
             xml_messages += "<MESSAGE>" + message + "</MESSAGE>"
-        print(xml_messages)
         return "<CHAT>" + xml_messages + "</CHAT>"
 
 class newMessage:
@@ -209,7 +229,9 @@ class newMessage:
     def POST(self, newMessage):
         global g_chat
         if newMessage != "":
-            g_chat.append(session.username + ":" + str(datetime.now()) + " > " + newMessage)
+            g_chat.append(session.username + ": " + datetime.now().strftime("%d-%m-%Y %H:%M:%S") + " > " + stringXMLfilter(newMessage))
+            # check maximum length of 10 messages in the chat
+            while len(g_chat) > 10: g_chat.pop(0)
 
         # send an empty xml element
         return g_xml_header
@@ -252,7 +274,7 @@ if __name__ == "__main__":
     threadOne.start()
     threadTwo.start()
 
-    g_chat.append("server:" + str(datetime.now()) + " > Server booted successfull")
+    g_chat.append("server: " + datetime.now().strftime("%d-%m-%Y %H:%M:%S") + " > Server booted successfull")
 
     app.run()
 
